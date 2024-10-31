@@ -211,6 +211,9 @@ export class Commander {
         let descriptionPadEnd = 11;
         jobs.forEach(j => descriptionPadEnd = Math.max(j.description.length, descriptionPadEnd));
 
+        let dependenciesPadEnd = 12;
+        jobs.forEach(j => dependenciesPadEnd = Math.max(j.dependencies?.join(",").length ?? 0, dependenciesPadEnd));
+
         const jobNamePad = parser.jobNamePad;
 
         if (!listAll) {
@@ -219,16 +222,23 @@ export class Commander {
 
         writeStreams.stdout(chalk`{grey ${"name".padEnd(jobNamePad)}  ${"description".padEnd(descriptionPadEnd)}}  `);
         writeStreams.stdout(chalk`{grey ${"stage".padEnd(stagePadEnd)}  ${"when".padEnd(whenPadEnd)}}  `);
-        writeStreams.stdout(chalk`{grey allow_failure  needs}\n`);
+        writeStreams.stdout(chalk`{grey allow_failure  ${"dependencies".padEnd(dependenciesPadEnd)}}  `);
+        writeStreams.stdout(chalk`{grey needs }\n`);
 
         const renderLine = (job: Job) => {
-            const needs = job.needs?.filter(n => !n.project && !n.pipeline).map(n => n.job);
+            const needs = job.needs?.filter(n => !n.project && !n.pipeline).map(n => n.job).join(",") ?? "";
+            const dependencies = job.dependencies?.join(",") ?? "";
+
             const allowFailure = job.allowFailure ? "true " : "false";
-            let jobLine = chalk`{blueBright ${job.name.padEnd(jobNamePad)}}  ${job.description.padEnd(descriptionPadEnd)}  `;
-            jobLine += chalk`{yellow ${job.stage.padEnd(stagePadEnd)}}  ${job.when.padEnd(whenPadEnd)}  ${allowFailure.padEnd(11)}`;
-            if (needs) {
-                jobLine += chalk`    [{blueBright ${needs}}]`;
-            }
+            const jobLine =
+                chalk`{blueBright ${job.name.padEnd(jobNamePad)}}  ` +
+                chalk`${job.description.padEnd(descriptionPadEnd)}  ` +
+                chalk`{yellow ${job.stage.padEnd(stagePadEnd)}}  ` +
+                chalk`${job.when.padEnd(whenPadEnd)}  ` +
+                chalk`${allowFailure.padEnd(13)}  ` +
+                chalk`{blueBright ${dependencies.padEnd(dependenciesPadEnd)}}  ` +
+                chalk`{blueBright ${needs}}`;
+
             writeStreams.stdout(`${jobLine}\n`);
         };
 
@@ -246,6 +256,7 @@ export class Commander {
                 stage: job.stage,
                 when: job.when,
                 allow_failure: job.allowFailure,
+                dependencies: job.dependencies,
                 needs: job.needs?.filter(n => !n.project && !n.pipeline),
                 ...job.rules ? {rules: job.rules} : {},
             });
@@ -265,10 +276,11 @@ export class Commander {
             jobs = jobs.filter(j => j.when !== "never");
         }
 
-        writeStreams.stdout("name;description;stage;when;allowFailure;needs\n");
+        writeStreams.stdout("name;description;stage;when;allowFailure;dependencies;needs\n");
         jobs.forEach((job) => {
             const needs = job.needs?.filter(n => !n.project && !n.pipeline).map(n => n.job).join(",") ?? [];
-            writeStreams.stdout(`${job.name};"${job.description}";${job.stage};${job.when};${job.allowFailure};[${needs}]\n`);
+            const dependencies = job.dependencies?.join(",") ?? [];
+            writeStreams.stdout(`${job.name};"${job.description}";${job.stage};${job.when};${job.allowFailure};[${dependencies}];[${needs}]\n`);
         });
     }
 

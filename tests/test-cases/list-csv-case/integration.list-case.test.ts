@@ -15,9 +15,9 @@ test("list-csv-case --list-csv", async () => {
     }, writeStreams);
 
     const expected = [
-        "name;description;stage;when;allowFailure;needs",
-        "test-job;\"Run Tests\";test;on_success;false;[]",
-        "build-job;\"\";build;on_success;true;[test-job]",
+        "name;description;stage;when;allowFailure;dependencies;needs",
+        "test-job;\"Run Tests\";test;on_success;false;[];[]",
+        "build-job;\"\";build;on_success;true;[];[test-job]",
     ];
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });
@@ -32,9 +32,9 @@ test("list-csv-case --list-csv colon should add process descriptors with semicol
     }, writeStreams);
 
     const expected = [
-        "name;description;stage;when;allowFailure;needs",
-        "test-job;\"Run;Tests\";test;on_success;false;[]",
-        "build-job;\"\";build;on_success;true;[test-job]",
+        "name;description;stage;when;allowFailure;dependencies;needs",
+        "test-job;\"Run;Tests\";test;on_success;false;[];[]",
+        "build-job;\"\";build;on_success;true;[];[test-job]",
     ];
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });

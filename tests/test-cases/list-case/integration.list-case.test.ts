@@ -16,9 +16,9 @@ test("list-case --list", async () => {
     }, writeStreams);
 
     const expected = [
-        chalk`{grey name       description}  {grey stage  when      }  {grey allow_failure  needs}`,
-        chalk`{blueBright test-job }  Run Tests    {yellow test }  on_success  false      `,
-        chalk`{blueBright build-job}               {yellow build}  on_success  true           [{blueBright test-job}]`,
+        chalk`{grey name       description}  {grey stage  when      }  {grey allow_failure  dependencies}  {grey needs }`,
+        chalk`{blueBright test-job }  Run Tests    {yellow test }  on_success  false          {blueBright             }  {blueBright }`,
+        chalk`{blueBright build-job}               {yellow build}  on_success  true           {blueBright             }  {blueBright test-job}`,
     ];
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });
