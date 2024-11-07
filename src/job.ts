@@ -386,7 +386,7 @@ export class Job {
 
     get interactive (): boolean {
         return this.jobData["gclInteractive"]
-            || this.argv.interactiveJobs.indexOf(this.name) >= 0
+            || this.argv.interactiveJobs.indexOf(this.baseName) >= 0
             || false;
     }
 
