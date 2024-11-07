@@ -659,11 +659,14 @@ export class Job {
     private generateScriptCommands (scripts: string[]) {
         let cmd = "";
         scripts.forEach((script) => {
-            // Print command echo'ed with $GCL_SHELL_PROMPT_PLACEHOLDER
-            const split = script.split(/\r?\n/);
-            const multilineText = split.length > 1 ? " # collapsed multi-line command" : "";
-            const text = split[0]?.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/[$]/g, "\\$");
-            cmd += `echo "${GCL_SHELL_PROMPT_PLACEHOLDER} ${text}${multilineText}"\n`;
+            // Do not generate echo commands for interactive jobs
+            if (!this.interactive) {
+                const split = script.split(/\r?\n/);
+                // Print command echo'ed with $GCL_SHELL_PROMPT_PLACEHOLDER
+                for (const line of split) {
+                    cmd += `echo "${GCL_SHELL_PROMPT_PLACEHOLDER} ${line.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/[$]/g, "\\$")}"\n`;
+                }
+            }
 
             // Execute actual script
             cmd += `${script}\n`;
