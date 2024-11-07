@@ -385,7 +385,9 @@ export class Job {
     }
 
     get interactive (): boolean {
-        return this.jobData["gclInteractive"] || false;
+        return this.jobData["gclInteractive"]
+            || this.argv.interactiveJobs.indexOf(this.name) >= 0
+            || false;
     }
 
     get injectSSHAgent (): boolean {
