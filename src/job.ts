@@ -59,6 +59,19 @@ interface JobOptions {
     expandVariables: boolean;
 }
 
+export interface Secret {
+    vault: string | {
+        engine: {
+            name: string;
+            path: string;
+        };
+        path: string;
+        field: string;
+    };
+    file: boolean;
+    token: string | undefined;
+}
+
 interface Cache {
     policy: "pull" | "pull-push" | "push";
     key: string | {files: string[]};
@@ -146,6 +159,7 @@ export class Job {
     private _longRunningSilentTimeout: NodeJS.Timeout = -1 as any;
     private _producers: {name: string; dotenv: string | null}[] | null = null;
     private _jobNamePad: number | null = null;
+    private _secrets: {[variable: string]: Secret};
 
     private _containersToClean: string[] = [];
     private _filesToRm: string[] = [];
@@ -173,6 +187,7 @@ export class Job {
         this.jobData = opt.data;
         this.pipelineIid = opt.pipelineIid;
         this._globalVariables = opt.globalVariables;
+        this._secrets = jobData.secrets ?? {};
 
         this.inherit = {};
         this.inherit.variables = this.jobData.inherit?.variables ?? true;
@@ -232,6 +247,9 @@ export class Job {
         for (const unsetVariable of argv.unsetVariables) {
             delete this._variables[unsetVariable];
         }
+
+        const secretsVariables = Utils.createSecretVariables(this._secrets, argv.secretsFile, this.fileVariablesDir);
+        this._variables = {...this._variables, ...secretsVariables};
 
         assert(this.scripts || this.trigger, chalk`{blueBright ${this.name}} must have script specified`);
 
