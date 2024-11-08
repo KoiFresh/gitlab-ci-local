@@ -25,6 +25,7 @@ export class Argv {
     static readonly default = {
         "variablesFile": ".gitlab-ci-local-variables.yml",
         "evaluateRuleChanges": true,
+        "secretsFile": ".gitlab-ci-local-secrets.yml",
     };
 
     map: Map<string, any> = new Map<string, any>();
@@ -104,6 +105,10 @@ export class Argv {
 
     get evaluateRuleChanges (): boolean {
         return this.map.get("evaluateRuleChanges") ?? Argv.default.evaluateRuleChanges;
+    }
+
+    get secretsFile (): string {
+        return this.map.get("secretsFile") ?? ".gitlab-ci-local-secrets.yml";
     }
 
     get file (): string {

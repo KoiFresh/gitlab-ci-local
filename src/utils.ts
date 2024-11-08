@@ -1,6 +1,6 @@
 import RE2 from "re2";
 import chalk from "chalk";
-import {Job, JobRule} from "./job.js";
+import {Job, JobRule, Secret} from "./job.js";
 import fs from "fs-extra";
 import checksum from "checksum";
 import base64url from "base64url";
@@ -13,6 +13,8 @@ import micromatch from "micromatch";
 import axios from "axios";
 import path from "path";
 import {Argv} from "./argv.js";
+import yaml from "js-yaml";
+import _ from "lodash";
 
 type RuleResultOpt = {
     argv: Argv;
@@ -171,6 +173,37 @@ export class Utils {
             }
         }
         return envMatchedVariables;
+    }
+
+    static createSecretVariables (secrets: {[name: string]: Secret}, secretsFile: string, fileVariablesDir: string) {
+        const variables: {[key: string]: string} = {};
+        if (Object.keys(secrets).length === 0) {
+            return variables;
+        }
+
+        assert(fs.existsSync(secretsFile), `Secrets file ${secretsFile} does not exist but secrets are defined`);
+        const secretsFileContent = yaml.load(fs.readFileSync(secretsFile, "utf8")) as unknown;
+
+        for (const secret of Object.entries(secrets)) {
+            const secretName = secret[0];
+            const rawSecretKey = typeof secret[1].vault === "string" ? secret[1].vault : `${secret[1].vault.engine.path}/${secret[1].vault.path}`;
+
+            // convert path to obj key: e.g "path/to/secret" => "path.to.secret" and "path/to/secret@root" => "root.path.to.secret"
+            const secretKey = rawSecretKey.replace(/\//g, ".").replace(/(^.*)@(.*)$/, "$2.$1").replace(/^\./, "");
+            assert(_.has(secretsFileContent, secretKey), `Secret ${secretName} from ${rawSecretKey} not found in ${secretsFile} at ${secretKey}`);
+
+            const secretValue = _.get(secretsFileContent, secretKey);
+            if (secret[1].file) {
+                const secretFilePath = `${fileVariablesDir}/${secret[0]}`;
+                fs.mkdirpSync(fileVariablesDir);
+                fs.writeFileSync(secretFilePath, secretValue);
+                variables[secretName] = secretFilePath;
+            } else {
+                variables[secretName] = secretValue;
+            }
+        }
+
+        return variables;
     }
 
     static getRulesResult (opt: RuleResultOpt, gitData: GitData, jobWhen: string = "on_success", jobAllowFailure: boolean | {exit_codes: number | number[]} = false): {when: string; allowFailure: boolean | {exit_codes: number | number[]}; variables?: {[name: string]: string}} {
