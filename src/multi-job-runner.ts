@@ -13,12 +13,13 @@ export type MultiJobRunnerOptions = {
  */
 export async function runMultipleJobs (jobs: Job[], options: MultiJobRunnerOptions): Promise<void> {
     const activeJobsById: Map<number, Promise<void>> = new Map();
+    const jobsToDebug: Job[] = [];
 
     for (const job of jobs) {
+        await debugJobs(jobsToDebug);
+
         if (job.interactive) {
             await Promise.all(activeJobsById.values());
-            await job.start();
-            continue;
         }
 
         if (activeJobsById.size >= options.concurrency) {
@@ -29,10 +30,25 @@ export async function runMultipleJobs (jobs: Job[], options: MultiJobRunnerOptio
         activeJobsById.set(job.jobId, execution);
         execution.then(() => {
             activeJobsById.delete(job.jobId);
+            if (job.argv.debug && job.jobStatus === "failed") {
+                jobsToDebug.push(job);
+            }
         });
-        continue;
 
+        if (job.interactive) {
+            await execution;
+        }
     }
 
     await Promise.all(activeJobsById.values());
+    await debugJobs(jobsToDebug);
+}
+
+async function debugJobs (jobs: Job[]): Promise<void> {
+    while (jobs.length > 0) {
+        const job = jobs.shift();
+        if (job) {
+            await job.debug();
+        }
+    }
 }
