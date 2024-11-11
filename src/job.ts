@@ -612,7 +612,7 @@ export class Job {
         await this.execPreScripts(expanded);
         if (this._prescriptsExitCode == null) throw Error("this._prescriptsExitCode must be defined!");
 
-        if (this.argv.debug && this._prescriptsExitCode !== 0) {
+        if (this.argv.debug && this.jobStatus === "failed") {
             // To successfully finish the job, someone has to call debug();
             clearInterval(this._longRunningSilentTimeout);
             return;
