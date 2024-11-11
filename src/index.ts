@@ -123,6 +123,12 @@ process.on("SIGUSR2", async () => await cleanupJobResources(jobs));
             requiresArg: true,
             default: Argv.default.variablesFile,
         })
+        .option("secrets-file", {
+            type: "string",
+            description: "Path to the project file secrets",
+            requiresArg: true,
+            default: Argv.default.secretsFile,
+        })
         .option("completion", {
             type: "boolean",
             description: "Generate tab completion script",
