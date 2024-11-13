@@ -16,7 +16,7 @@ beforeAll(() => {
 });
 
 test("cache-docker-mount <consume-cache> --mount-cache --needs", async () => {
-    void Utils.spawn(["docker", "volume", "rm", "-f", "gcl-gcl-cache-docker-mount-mavenLw"]);
+    await Utils.spawn(["docker", "volume", "rm", "-f", "gcl-gcl-cache-docker-mount-mavenPw"]);
     const writeStreams = new WriteStreamsMock();
     await handler({
         cwd: "tests/test-cases/cache-docker-mount",
@@ -25,7 +25,6 @@ test("cache-docker-mount <consume-cache> --mount-cache --needs", async () => {
         mountCache: true,
     }, writeStreams);
 
-    expect(await fs.pathExists("tests/test-cases/cache-docker-mount/.gitlab-ci-local/cache/maven/")).toEqual(false);
-    expect((await Utils.bash("docker volume ls | grep -w gcl-gcl-cache-docker-mount-mavenLw")).exitCode).toBe(0);
-
+    expect(await fs.pathExists("tests/test-cases/cache-docker-mount/.gitlab-ci-local/cache/maven?")).toEqual(false);
+    expect((await Utils.bash("docker volume ls | grep -w gcl-gcl-cache-docker-mount-mavenPw")).exitCode).toBe(0);
 });
