@@ -14,6 +14,7 @@ export type MultiJobRunnerOptions = {
 export async function runMultipleJobs (jobs: Job[], options: MultiJobRunnerOptions): Promise<void> {
     const activeJobsById: Map<number, Promise<void>> = new Map();
     const jobsToDebug: Job[] = [];
+    const execptions: unknown[] = [];
 
     for (const job of jobs) {
         await debugJobs(jobsToDebug);
@@ -33,7 +34,7 @@ export async function runMultipleJobs (jobs: Job[], options: MultiJobRunnerOptio
             if (job.argv.debug && job.jobStatus === "failed") {
                 jobsToDebug.push(job);
             }
-        });
+        }).catch((e) => execptions.push(e));
 
         if (job.interactive) {
             await execution;
@@ -41,7 +42,14 @@ export async function runMultipleJobs (jobs: Job[], options: MultiJobRunnerOptio
     }
 
     await Promise.all(activeJobsById.values());
+    await throwException(execptions);
     await debugJobs(jobsToDebug);
+}
+
+async function throwException (execptions: unknown[]): Promise<void> {
+    if (execptions.length > 0) {
+        throw execptions[0];
+    }
 }
 
 async function debugJobs (jobs: Job[]): Promise<void> {
