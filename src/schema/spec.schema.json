@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gitlab.com/template.yml",
+  "markdownDescription": "Gitlab has a built-in solution for doing CI called Gitlab CI. It is configured by supplying a file called `.gitlab-ci.yml`, which will list all the jobs that are going to run for the project. A full list of all options can be found [here](https://docs.gitlab.com/ee/ci/yaml). [Learn More](https://docs.gitlab.com/ee/ci/index.html).",
+  "type": "object",
+  "properties": {
+    "spec": {
+      "$ref": "#/definitions/spec"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "spec": {
+      "type": "object",
+      "markdownDescription": "The specification of the Gitlab CI component. [Learn More](https://docs.gitlab.com/ee/ci/yaml/inputs.html)",
+      "properties": {
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "object",
+      "markdownDescription": "Define inputs for the component.",
+      "additionalProperties": {
+        "$ref": "#/definitions/input"
+      }
+    },
+    "input": {
+      "oneOf": [
+        {
+          "type": "null",
+          "markdownDescription": "A single input for the component."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "description": {},
+            "regex": {},
+            "type": {},
+            "default": {},
+            "options": {}
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "$ref": "#/definitions/base_input",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/string_input"
+                },
+                {
+                  "$ref": "#/definitions/array_input"
+                },
+                {
+                  "$ref": "#/definitions/number_input"
+                },
+                {
+                  "$ref": "#/definitions/boolean_input"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "base_input": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "markdownDescription": "Give a description to a specific input. The description does not affect the input, but can help people understand the input details or expected values."
+        },
+        "regex": {
+          "type": "string",
+          "markdownDescription": "Specify a regular expression that the input must match."
+        }
+      }
+    },
+    "string_input": {
+      "markdownDescription": "A string input for the component.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "markdownDescription": "To force a specific input type, which can be `string` (default when not specified), `array`, `number`, or `boolean`",
+          "enum": ["string"]
+        },
+        "default": {
+          "type": "string",
+          "markdownDescription": "The default value for the input."
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "To specify a list of allowed values for an input.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "array_input": {
+      "markdownDescription": "An array input for the component.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "markdownDescription": "To force a specific input type, which can be `string` (default when not specified), `array`, `number`, or `boolean`",
+          "enum": ["array"]
+        },
+        "default": {
+          "type": "array",
+          "markdownDescription": "The default value for the input."
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "To specify a list of allowed values for an input."
+        }
+      }
+    },
+    "number_input": {
+      "markdownDescription": "A number input for the component.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "markdownDescription": "To force a specific input type, which can be `string` (default when not specified), `array`, `number`, or `boolean`",
+          "enum": ["number"]
+        },
+        "default": {
+          "type": "number",
+          "markdownDescription": "The default value for the input."
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "To specify a list of allowed values for an input.",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "boolean_input": {
+      "markdownDescription": "A boolean input for the component.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "markdownDescription": "To force a specific input type, which can be `string` (default when not specified), `array`, `number`, or `boolean`",
+          "enum": ["boolean"]
+        },
+        "default": {
+          "type": "boolean",
+          "markdownDescription": "The default value for the input."
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "To specify a list of allowed values for an input.",
+          "items": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
