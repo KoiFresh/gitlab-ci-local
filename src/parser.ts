@@ -17,6 +17,7 @@ import {VariablesFromFiles} from "./variables-from-files.js";
 import {Argv} from "./argv.js";
 import {WriteStreams} from "./write-streams.js";
 import {init as initPredefinedVariables} from "./predefined-variables.js";
+import specSchema from "./schema/spec.js";
 
 const MAX_FUNCTIONS = 3;
 const INCLUDE_INPUTS_SUPPORTED_TYPES = ["string", "boolean", "number", "array"] as const;
@@ -104,13 +105,13 @@ export class Parser {
         const expanded = Utils.expandVariables(variables);
 
         let yamlDataList: any[] = [{stages: [".pre", "build", "test", "deploy", ".post"]}];
-        const gitlabCiData = await Parser.loadYaml(`${cwd}/${file}`, {}, this.expandVariables);
+        const gitlabCiData = await Parser.loadYaml(`${cwd}/${file}`, {}, this.expandVariables, argv.jsonSchemaValidation);
 
-        yamlDataList = yamlDataList.concat(await ParserIncludes.init(gitlabCiData, {argv, cwd, stateDir, writeStreams, gitData, fetchIncludes, variables: expanded, expandVariables: this.expandVariables, maximumIncludes: argv.maximumIncludes}));
+        yamlDataList = yamlDataList.concat(await ParserIncludes.init(gitlabCiData, {argv, cwd, stateDir, writeStreams, gitData, fetchIncludes, variables: expanded, expandVariables: this.expandVariables, maximumIncludes: argv.maximumIncludes, specSchemaValidation: argv.jsonSchemaValidation}));
         ParserIncludes.resetCount();
 
-        const gitlabCiLocalData = await Parser.loadYaml(`${cwd}/.gitlab-ci-local.yml`, {}, this.expandVariables);
-        yamlDataList = yamlDataList.concat(await ParserIncludes.init(gitlabCiLocalData, {argv, cwd, stateDir, writeStreams, gitData, fetchIncludes, variables: expanded, expandVariables: this.expandVariables, maximumIncludes: argv.maximumIncludes}));
+        const gitlabCiLocalData = await Parser.loadYaml(`${cwd}/.gitlab-ci-local.yml`, {}, this.expandVariables, argv.jsonSchemaValidation);
+        yamlDataList = yamlDataList.concat(await ParserIncludes.init(gitlabCiLocalData, {argv, cwd, stateDir, writeStreams, gitData, fetchIncludes, variables: expanded, expandVariables: this.expandVariables, maximumIncludes: argv.maximumIncludes, specSchemaValidation: argv.jsonSchemaValidation}));
         ParserIncludes.resetCount();
 
         const gitlabData: any = deepExtend({}, ...yamlDataList);
@@ -233,7 +234,7 @@ export class Parser {
         });
     }
 
-    static async loadYaml (filePath: string, ctx: any = {}, expandVariables: boolean = true): Promise<any> {
+    static async loadYaml (filePath: string, ctx: any = {}, expandVariables: boolean = true, specSchemaValidation: boolean = false): Promise<any> {
         const ymlPath = `${filePath}`;
         if (!fs.existsSync(ymlPath)) {
             return {};
@@ -307,6 +308,14 @@ export class Parser {
         if (isGitlabSpecFile(fileData[0])) {
             const inputsSpecification: any = fileData[0];
             const uninterpolatedConfigurations: any = fileData[1];
+
+            if (specSchemaValidation) {
+                Validator.jsonSchemaValidation({
+                    pathToExpandedGitLabCi: filePath,
+                    gitLabCiConfig: inputsSpecification,
+                    schema: specSchema,
+                });
+            }
 
             const interpolatedConfigurations = JSON.stringify(uninterpolatedConfigurations)
                 .replace(

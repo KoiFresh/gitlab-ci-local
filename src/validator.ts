@@ -2,16 +2,19 @@ import Ajv from "ajv";
 import {Job} from "./job.js";
 import assert from "assert";
 import chalk from "chalk";
-import schema from "./schema/index.js";
+import defaultSchema from "./schema/index.js";
 import {betterAjvErrors} from "./schema-error.js";
 import terminalLink from "terminal-link";
+import {cwd} from "process";
+import path from "path";
 
 const MAX_ERRORS = 5;
 
 export class Validator {
-    static jsonSchemaValidation ({pathToExpandedGitLabCi, gitLabCiConfig}: {
+    static jsonSchemaValidation ({pathToExpandedGitLabCi, gitLabCiConfig, schema = defaultSchema}: {
         pathToExpandedGitLabCi: string;
         gitLabCiConfig: object;
+        schema?: any;
     }) {
         const ajv = new Ajv({
             verbose: true,
@@ -38,12 +41,14 @@ export class Validator {
                 e += chalk`\t• {redBright ${betterErrors[i].message}} at {blueBright ${betterErrors[i].path}}\n`;
             }
 
+            const filename = path.relative(cwd(), pathToExpandedGitLabCi);
+
             assert(valid, chalk`
 {reset Invalid .gitlab-ci.yml configuration!
 ${e.trimEnd()}
 
 For further troubleshooting, consider either of the following:
-\t• Copy the content of {blueBright ${terminalLink(".gitlab-ci-local/expanded-gitlab-ci.yml", pathToExpandedGitLabCi)}} to the ${terminalLink("pipeline editor", "https://docs.gitlab.com/ee/ci/pipeline_editor/")} to debug it
+\t• Copy the content of {blueBright ${terminalLink(filename, pathToExpandedGitLabCi)}} to the ${terminalLink("pipeline editor", "https://docs.gitlab.com/ee/ci/pipeline_editor/")} to debug it
 \t• Use --json-schema-validation=false to disable schema validation (not recommended)}
 `);
         }
