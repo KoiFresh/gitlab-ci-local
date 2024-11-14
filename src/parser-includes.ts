@@ -20,6 +20,7 @@ type ParserIncludesInitOptions = {
     variables: {[key: string]: string};
     expandVariables: boolean;
     maximumIncludes: number;
+    specSchemaValidation?: boolean;
 };
 
 export class ParserIncludes {
@@ -100,7 +101,7 @@ export class ParserIncludes {
                 const localPath = sanitizeIncludeLocal(value["local"]);
                 const files = await globby(localPath, {dot: true, cwd});
                 for (const localFile of files) {
-                    const content = await Parser.loadYaml(`${cwd}/${localFile}`, {inputs: value.inputs || {}}, expandVariables);
+                    const content = await Parser.loadYaml(`${cwd}/${localFile}`, {inputs: value.inputs || {}}, expandVariables, opts.specSchemaValidation);
                     includeDatas = includeDatas.concat(await this.init(content, opts));
                 }
             } else if (value["project"]) {
@@ -145,7 +146,7 @@ export class ParserIncludes {
                             continue;
                         }
 
-                        const content = await Parser.loadYaml(localComponentInclude, {inputs: value.inputs || {}}, expandVariables);
+                        const content = await Parser.loadYaml(localComponentInclude, {inputs: value.inputs || {}}, expandVariables, opts.specSchemaValidation);
                         includeDatas = includeDatas.concat(await this.init(content, opts));
                         break;
                     } else {

@@ -267,6 +267,7 @@ test("include-inputs inputs validation for unsupported type", async () => {
         await handler({
             cwd: "tests/test-cases/include-inputs/input-templates/type-validation/unsupported",
             preview: true,
+            jsonSchemaValidation: false,
         }, writeStreams);
     } catch (e: any) {
         assert(e instanceof AssertionError, "e is not instanceof AssertionError");
