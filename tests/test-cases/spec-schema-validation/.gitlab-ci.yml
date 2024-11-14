@@ -1,0 +1,9 @@
+spec:
+  inputs:
+    x:
+      type: number
+      default: not_a_number
+---
+sample:
+  script:
+    - echo "Hello World"
